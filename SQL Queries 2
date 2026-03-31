@@ -1,0 +1,51 @@
+
+// Manual Way Of Loading Data
+
+create or replace storage integration aws_integration
+type = external_stage
+storage_provider = 's3'
+enabled=true
+storage_aws_role_arn='arn:aws:iam::950742490128:role/Airbnb-Project-Role'
+storage_allowed_locations=('s3://airbnb-dataset-csv')
+comment='optional comment';
+
+desc storage integration aws_integration
+
+
+create or replace stage aws_stage
+URL = 's3://airbnb-dataset-csv'
+storage_integration = aws_integration;
+
+create or replace file format aws_format
+type = 'csv'
+field_delimiter = ','
+skip_header = 1
+field_optionally_enclosed_by = '"'
+date_format='dd-mm-yyyy';
+
+
+create or replace table new_table(
+    id int,
+    name text,
+    host_id int,
+    host_name text,
+    neighbourhood_group text,
+    neighbourhood text,
+    latitude float,
+    longitude float,
+    room_type text,
+    price int,
+    minimum_nights int,
+    number_of_reviews int,
+    last_review date,
+    reviews_per_month float,
+    calculated_host_listings_count int,
+    availability_365 int,
+    price_in_rupees int
+)
+
+COPY INTO new_table
+FROM '@aws_stage/AB_NYC_2019.csv'
+FILE_FORMAT = aws_format;
+
+select * from new_table
