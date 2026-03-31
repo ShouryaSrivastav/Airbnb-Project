@@ -55,6 +55,11 @@ The dashboard tracks key indicators such as:
 
 ### 2️⃣ AWS IAM & Snowflake Integration
 
+![S3 Bucket - ](https://github.com/ShouryaSrivastav/Airbnb-Project/blob/65b0ca97f266b3a30f90e89348fb9b81df42cb0a/First%20Page%20Airbnb%20Project.png)
+![IAM Role - ](https://github.com/ShouryaSrivastav/Airbnb-Project/blob/65b0ca97f266b3a30f90e89348fb9b81df42cb0a/First%20Page%20Airbnb%20Project.png)
+![Integration - ](https://github.com/ShouryaSrivastav/Airbnb-Project/blob/65b0ca97f266b3a30f90e89348fb9b81df42cb0a/First%20Page%20Airbnb%20Project.png)
+![Loading Data - ](https://github.com/ShouryaSrivastav/Airbnb-Project/blob/65b0ca97f266b3a30f90e89348fb9b81df42cb0a/First%20Page%20Airbnb%20Project.png)
+
 - Created **IAM role and trust policy**
 - Configured **S3 read permissions**
 - Built **Snowflake storage integration**
@@ -64,6 +69,9 @@ The dashboard tracks key indicators such as:
 ---
 
 ### 3️⃣ Data Cleaning & Transformation (Snowflake SQL)
+
+![Data Cleaning - ](https://github.com/ShouryaSrivastav/Airbnb-Project/blob/65b0ca97f266b3a30f90e89348fb9b81df42cb0a/First%20Page%20Airbnb%20Project.png)
+![Data Cleaning - ](https://github.com/ShouryaSrivastav/Airbnb-Project/blob/65b0ca97f266b3a30f90e89348fb9b81df42cb0a/First%20Page%20Airbnb%20Project.png)
 
 Performed scalable cleaning inside Snowflake:
 
