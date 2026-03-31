@@ -57,8 +57,8 @@ The dashboard tracks key indicators such as:
 
 ![S3 Bucket - ](https://github.com/ShouryaSrivastav/Airbnb-Project/blob/65b0ca97f266b3a30f90e89348fb9b81df42cb0a/First%20Page%20Airbnb%20Project.png)
 ![IAM Role - ](https://github.com/ShouryaSrivastav/Airbnb-Project/blob/65b0ca97f266b3a30f90e89348fb9b81df42cb0a/First%20Page%20Airbnb%20Project.png)
-![Integration - ](https://github.com/ShouryaSrivastav/Airbnb-Project/blob/65b0ca97f266b3a30f90e89348fb9b81df42cb0a/First%20Page%20Airbnb%20Project.png)
-![Loading Data - ](https://github.com/ShouryaSrivastav/Airbnb-Project/blob/65b0ca97f266b3a30f90e89348fb9b81df42cb0a/First%20Page%20Airbnb%20Project.png)
+![Integration - ](https://github.com/ShouryaSrivastav/Airbnb-Project/blob/c7226f0d8304e4bbf61a37c4d1bf0caeb30761fc/Integration.png)
+![Loading Data - ](https://github.com/ShouryaSrivastav/Airbnb-Project/blob/c7226f0d8304e4bbf61a37c4d1bf0caeb30761fc/Loading%20Data.png)
 
 - Created **IAM role and trust policy**
 - Configured **S3 read permissions**
@@ -70,8 +70,8 @@ The dashboard tracks key indicators such as:
 
 ### 3️⃣ Data Cleaning & Transformation (Snowflake SQL)
 
-![Data Cleaning - ](https://github.com/ShouryaSrivastav/Airbnb-Project/blob/65b0ca97f266b3a30f90e89348fb9b81df42cb0a/First%20Page%20Airbnb%20Project.png)
-![Data Cleaning - ](https://github.com/ShouryaSrivastav/Airbnb-Project/blob/65b0ca97f266b3a30f90e89348fb9b81df42cb0a/First%20Page%20Airbnb%20Project.png)
+![Data Cleaning 1 - ](https://github.com/ShouryaSrivastav/Airbnb-Project/blob/c7226f0d8304e4bbf61a37c4d1bf0caeb30761fc/Data%20Cleaning.png)
+![Data Cleaning 2 - ](https://github.com/ShouryaSrivastav/Airbnb-Project/blob/c7226f0d8304e4bbf61a37c4d1bf0caeb30761fc/Data%20CLeaning%202.png)
 
 Performed scalable cleaning inside Snowflake:
 
