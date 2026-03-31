@@ -1,1 +1,673 @@
 
+// Integration Code
+
+create or replace storage integration airbnb_aws_integration
+type= external_stage
+storage_provider = 's3'
+enabled = true
+storage_aws_role_arn = 'arn:aws:iam::950742490128:role/Airbnb-Project-Role'
+storage_allowed_locations = ('s3://airbnb-dataset-csv')
+comment='optional comment'
+
+desc storage integration airbnb_aws_integration
+
+//Also Don't Forget To Change The Trust Policy Of AWS Role
+
+//Loading Data
+
+create database airbnb_project;
+
+use airbnb_project;
+
+create schema airp;
+
+create or replace stage airbnb_proj_stage
+url = 's3://airbnb-dataset-csv'
+storage_integration = airbnb_aws_integration
+
+create or replace file format airp_file_format
+type = 'csv'
+field_delimiter = ','
+parse_header = true
+field_optionally_enclosed_by = '"'
+
+select * 
+from table(
+    infer_schema(
+        LOCATION => '@airbnb_proj_stage',
+        FILE_FORMAT => 'airp_file_format'
+    
+    )
+)
+
+create or replace table airbnb_dataset
+using template(
+    select array_agg(object_construct(*))
+    from table(
+        infer_schema(
+            LOCATION => '@airbnb_proj_stage',
+            FILE_FORMAT => 'airp_file_format'
+        )
+    
+    )
+    
+)
+
+copy into airbnb_dataset
+from '@airbnb_proj_stage'
+file_format = 'airp_file_format'
+MATCH_BY_COLUMN_NAME = CASE_INSENSITIVE;
+
+
+
+select count(*)
+from airbnb_dataset
+
+
+select * from airbnb_dataset
+
+// Created Another Table For Data Cleaning
+
+create or replace table airbnb_cleaned
+using template(
+    select array_agg(object_construct(*))
+        from table(
+            infer_schema(
+                location => '@airbnb_proj_stage',
+                FILE_FORMAT => 'airp_file_format'
+            )
+        )
+)
+
+insert into airbnb_cleaned
+select * from airbnb_dataset
+
+// Checking Data Redundancy and Repeatation or Null and Blank Values
+
+select * from airbnb_cleaned
+
+//id (c1) -- fully clean
+select count("id") from airbnb_cleaned
+
+select count(*) from airbnb_cleaned
+where "id" = 0
+
+select count(*) from airbnb_cleaned
+where "id" is null
+
+select distinct count("id") from airbnb_cleaned
+
+//name (c2) -- 16 null values
+select * from airbnb_cleaned
+where "name" is NULL 
+or "name" = 'Unknown' 
+or "name" = 'unknown'
+or "name" = ''
+or "name" = 'NA' 
+or "name" = 'na' 
+
+select * from(
+select * from airbnb_cleaned
+    where "name" is NULL
+)
+
+select distinct "name" from airbnb_cleaned
+
+//host_id (c3) -- 0 null values
+
+select count("host_id") from airbnb_cleaned
+
+select count(*) from airbnb_cleaned
+where "host_id" = 0
+
+//host_name (c4) -- 21 null no blank or empty values 2 Na values
+
+select count("host_name") from airbnb_cleaned
+
+select count(*)
+from airbnb_cleaned
+where "host_name" is null;
+
+select *
+from airbnb_cleaned
+where "host_name" = 'unknown'
+or "host_name" = 'Unknown'
+or "host_name" = 'NA'
+or "host_name" = 'Na'
+or "host_name" = ''
+or "host_name" = 'na'
+
+select * 
+from airbnb_cleaned
+where "host_name" is null;
+
+//neighbourhood_group (c5) -- fully cleaned
+
+select count("neighbourhood_group") from airbnb_cleaned
+
+select *
+from airbnb_cleaned
+where "neighbourhood_group" = 'unknown'
+or "neighbourhood_group" = 'Unknown'
+or "neighbourhood_group" = 'NA'
+or "neighbourhood_group" = 'Na'
+or "neighbourhood_group" = 'na'
+or "neighbourhood_group" = ''
+
+// neighbourhood (c6) -- 0 null values
+
+select count(*)
+from airbnb_cleaned
+where "neighbourhood" is null
+
+select *
+from airbnb_cleaned
+where "neighbourhood" = 'unknown'
+or "neighbourhood" = 'Unknown'
+or "neighbourhood" = 'NA'
+or "neighbourhood" = 'Na'
+or "neighbourhood" = 'na'
+or "neighbourhood" = ''
+
+// latitude (c7) -- 0 null values
+select count(*)
+from airbnb_cleaned
+where "latitude" is null
+
+select count(*) 
+from airbnb_cleaned
+where "latitude" = 0
+
+
+// longitude (c8) -- 0 null values
+select count(*)
+from airbnb_cleaned
+where "longitude" is null
+
+select count(*) 
+from airbnb_cleaned
+where "longitude" = 0
+
+select * from airbnb_cleaned
+
+//room_type (c9) -- 0 null values
+select count(*) 
+from airbnb_cleaned
+where "room_type" is null
+
+select count(*)
+from airbnb_cleaned
+where "room_type" = ''
+or "room_type" = 'Unknown'
+or "room_type" = 'Unknown'
+or "room_type" = 'NA'
+or "room_type" = 'na'
+or "room_type" = 'Na'
+
+
+//price (c10) -- 0 null values , 11 zeros
+select count(*)
+from airbnb_cleaned
+where "price" is null
+
+select count(*)
+from airbnb_cleaned
+where "price" = 0
+
+select * from airbnb_cleaned
+where "price" = 0
+
+//minimum_nights (c11) -- 0 null values 
+select count(*)
+from airbnb_cleaned
+where "minimum_nights" is null
+
+select count(*)
+from airbnb_cleaned
+where "minimum_nights" = 0
+
+//number of reviews (c12) -- fully clean 10052 zeros
+select count(*)
+from airbnb_cleaned
+where "number_of_reviews" is null
+
+select count(*)
+from airbnb_cleaned
+where "number_of_reviews" = 0
+
+// last review (c13) -- 10052 nulls
+select count(*) 
+from airbnb_cleaned
+where "last_review" is null
+
+select * from airbnb_cleaned
+
+// reviews per month (c14) -- 10052 nulls
+select count(*) 
+from airbnb_cleaned
+where "reviews_per_month" is null
+
+select count(*) 
+from airbnb_cleaned
+where "reviews_per_month" = 0
+
+//calculated host listing count (c15) -- zero null values 
+
+select count(*) 
+from airbnb_cleaned
+where "calculated_host_listings_count" is null
+
+select count(*) 
+from airbnb_cleaned
+where "calculated_host_listings_count" = 0
+
+// availability_365 (c16) -- zero null values 17533 zeros
+select count(*) 
+from airbnb_cleaned
+where "availability_365" is null
+
+select count(*) 
+from airbnb_cleaned
+where "availability_365" = 0
+
+
+// price in rupees (c17) -- zero nulls and 11 zeros
+select count(*) 
+from airbnb_cleaned
+where "price in rupees " is null;
+
+select count(*) 
+from airbnb_cleaned
+where "price in rupees " = 0 
+
+select count(*) 
+from airbnb_cleaned
+where "c17" = '' 
+
+//Data Cleaning
+
+select * from AIRBNB_PROJECT.AIRP.AIRBNB_CLEANED
+
+//column c2 data ceaning
+select count(*),"name" as name 
+from airbnb_cleaned
+group by "name"
+having count(*) >= 2
+
+select * from airbnb_cleaned
+where "name" is null
+
+select * from airbnb_cleaned
+where "neighbourhood_group" = 'Brooklyn' 
+and "neighbourhood" = 'Williamsburg' 
+and "room_type" = 'Private room'
+
+update airbnb_cleaned
+set "name" = 'Private Room in Williamsburg'
+where "name" is null 
+and "neighbourhood_group" = 'Brooklyn' 
+and "neighbourhood" = 'Williamsburg' 
+and "room_type" = 'Private room'
+
+select * from airbnb_cleaned
+where "neighbourhood_group" = 'Brooklyn' 
+and "neighbourhood" = 'Bushwick' 
+and ("room_type" = 'Private room' or "room_type" = 'Entire home/apt')
+
+update airbnb_cleaned
+set "name" = 'Bushwick Oasis'
+where "name" is null 
+and "neighbourhood_group" = 'Brooklyn' 
+and "neighbourhood" = 'Bushwick' 
+and ("room_type" = 'Private room' or "room_type" = 'Entire home/apt')
+
+select * from airbnb_cleaned
+where "neighbourhood_group" = 'Brooklyn' 
+and "neighbourhood" = 'Bedford-Stuyvesant' 
+
+update airbnb_cleaned
+set "name" = '20-25 minutes to downtown NYC/30-40 to midtown'
+where "name" is null 
+and "neighbourhood_group" = 'Brooklyn' 
+and "neighbourhood" = 'Bedford-Stuyvesant' 
+
+select * from airbnb_cleaned
+where "neighbourhood_group" = 'Manhattan' 
+and "room_type" = 'Entire home/apt' 
+and "neighbourhood" = 'Battery Park City'
+
+select * from airbnb_cleaned
+where "c2" is null
+
+update airbnb_cleaned
+set "name" = '2 Bdrm in Luxury Condo on Hudson'
+where "name" is null 
+and "neighbourhood_group" = 'Manhattan' 
+and "room_type" = 'Entire home/apt' 
+and "neighbourhood" = 'Battery Park City'
+
+select * from airbnb_cleaned
+where "neighbourhood_group" = 'Manhattan' 
+and "room_type" = 'Entire home/apt' 
+and "neighbourhood" = 'East Village'
+
+update airbnb_cleaned
+set "name" = 'Charming East Village Apartment'
+where "name" is null 
+and  "neighbourhood_group" = 'Manhattan' 
+and "room_type" = 'Entire home/apt' 
+and "neighbourhood" = 'East Village'
+
+select * from airbnb_cleaned
+where "name" is null
+
+select * from airbnb_cleaned
+where "neighbourhood_group" = 'Manhattan' 
+and "room_type" = 'Entire home/apt' 
+and ("neighbourhood" = 'Greenwich Village' or "neighbourhood" = 'Nolita' or "neighbourhood" = 'Harlem')
+
+select * from airbnb_cleaned
+where "neighbourhood_group" = 'Manhattan' 
+and "room_type" = 'Entire home/apt' 
+and ("neighbourhood" = 'Harlem')
+
+update airbnb_cleaned
+set "name" = 'Harlem Gem'
+where "name" is null
+and "neighbourhood_group" = 'Manhattan' 
+and "room_type" = 'Entire home/apt' 
+and ("neighbourhood" = 'Harlem')
+
+update airbnb_cleaned
+set "name" = 'Greenwich Village Apartment'
+where "name" is null
+and "neighbourhood_group" = 'Manhattan' 
+and "room_type" = 'Entire home/apt' 
+and "neighbourhood" = 'Greenwich Village'
+
+update airbnb_cleaned
+set "name" = '"Simple Perfect Soho"'
+where "name" is null
+and "neighbourhood_group" = 'Manhattan' 
+and "room_type" = 'Entire home/apt' 
+and "neighbourhood" = 'Nolita'
+
+update airbnb_cleaned
+set "name" = 'Columbus Circle Spacious Studio near everything'
+where "name" is null
+and "neighbourhood_group" = 'Manhattan' 
+and "room_type" = 'Entire home/apt' 
+and "id" = '9325951'
+
+select * from airbnb_cleaned
+where "name" is null
+
+select * from airbnb_cleaned
+where "neighbourhood_group" = 'Manhattan'
+and "room_type" = 'Private room'
+
+select * from airbnb_cleaned
+where "neighbourhood_group" = 'Manhattan' 
+and "neighbourhood" = 'Washington Heights' 
+and "room_type" = 'Private room'
+
+
+update airbnb_cleaned
+set "name" = 'HARLEM, NEW YORK WELCOMES YOU!!'
+where "name" is null
+and "neighbourhood_group" = 'Manhattan' 
+and "room_type" = 'Private room' 
+and "neighbourhood" = 'Washington Heights'
+
+select * from airbnb_cleaned
+where "neighbourhood_group" = 'Manhattan' 
+and "neighbourhood" = 'Chinatown' 
+and "room_type" = 'Private room'
+
+update airbnb_cleaned
+set "name" = '*FEMALES ONLY* BEAUTIFUL ROOM in downtown NYC!'
+where "name" is null
+and "neighbourhood_group" = 'Manhattan' 
+and "neighbourhood" = 'Chinatown' 
+and "room_type" = 'Private room'
+
+select * from airbnb_cleaned
+where "name" is null
+
+select * from airbnb_cleaned
+where "neighbourhood_group" = 'Manhattan' 
+and "neighbourhood" = 'Upper West Side' 
+and "room_type" = 'Private room'
+
+update airbnb_cleaned
+set "name" = 'Central Park View-Free Museum Tickets-Private Room'
+where "name" is null
+and "neighbourhood_group" = 'Manhattan' 
+and "neighbourhood" = 'Upper West Side' 
+and "room_type" = 'Private room'
+
+select * from airbnb_cleaned
+where "neighbourhood_group" = 'Brooklyn' 
+and "neighbourhood" = 'Brownsville' 
+and "room_type" = 'Private room'
+
+update airbnb_cleaned
+set "name" = 'APT-2:Room 1'
+where "name" is null
+and "neighbourhood_group" = 'Brooklyn' 
+and "neighbourhood" = 'Brownsville' 
+and "room_type" = 'Private room'
+
+select * from airbnb_cleaned
+where "neighbourhood_group" = 'Bronx' 
+and "neighbourhood" = 'Fordham' 
+and "room_type" = 'Shared room'
+
+update airbnb_cleaned
+set "name" = 'Semi Private Bedroom'
+where "name" is null
+and "neighbourhood_group" = 'Bronx' 
+and "neighbourhood" = 'Fordham' 
+and "room_type" = 'Shared room'
+
+select count("name") from airbnb_cleaned
+
+select  "room_type",count(*) from airbnb_cleaned
+where "host_name" is null
+group by "room_type"
+
+//column c4 data ceaning
+
+
+select * from airbnb_cleaned
+where "host_name" is null
+
+select  "neighbourhood_group",count(*) from airbnb_cleaned
+where "host_name" is null
+group by "neighbourhood_group"
+
+select * from airbnb_cleaned
+where "neighbourhood_group" = 'Brooklyn'
+and "room_type" = 'Private room'
+
+update airbnb_cleaned
+set "host_name" = 'Michael'
+where "host_name" is null
+and "neighbourhood_group" = 'Brooklyn'
+
+select * from airbnb_cleaned
+where "neighbourhood_group" = 'Manhattan'
+and ("room_type" = 'Private room' or "room_type" = 'Entire home/apt')
+
+update airbnb_cleaned
+set "host_name" = 'Sonder (NYC)'
+where "host_name" is null
+and "neighbourhood_group" = 'Manhattan'
+
+select * from airbnb_cleaned
+where "neighbourhood_group" = 'Queens'
+and "room_type" = 'Private room'
+
+update airbnb_cleaned
+set "host_name" = 'Kazuya'
+where "host_name" is null
+and "neighbourhood_group" = 'Queens'
+
+select * from airbnb_cleaned
+where "neighbourhood_group" = 'Bronx'
+and "room_type" = 'Entire home/apt'
+
+update airbnb_cleaned
+set "host_name" = 'Sasha'
+where "host_name" is null
+and "neighbourhood_group" = 'Bronx'
+
+select * from airbnb_cleaned
+where "host_name" is null or "host_name" = ''
+
+select * 
+from airbnb_cleaned
+where "neighbourhood_group" = 'Manhattan' 
+
+
+update airbnb_cleaned
+set "host_name" = 'Sonder (NYC)'
+where "host_name" = 'Na'
+
+//column c10 data cleaning
+
+select * 
+from airbnb_cleaned
+where "price" is null 
+or "price" = 0
+
+select "room_type",count(*) 
+from airbnb_cleaned
+where "price" = 0
+group by "room_type"
+
+select "neighbourhood_group",count(*) 
+from airbnb_cleaned
+where "price" = 0
+group by "neighbourhood_group"
+
+select avg("price") from airbnb_cleaned
+where "neighbourhood_group" = 'Brooklyn' 
+and "room_type" = 'Private room'
+
+update airbnb_cleaned
+set "price" = 77
+where "price" = 0
+and "neighbourhood_group" = 'Brooklyn'
+and "room_type" = 'Private room'
+
+
+select avg("price") from airbnb_cleaned
+where "neighbourhood_group" = 'Brooklyn' 
+and "room_type" = 'Entire home/apt'
+
+update airbnb_cleaned
+set "price" = 178
+where "price" = 0
+and "neighbourhood_group" = 'Brooklyn'
+and "room_type" = 'Entire home/apt'
+
+select * from airbnb_cleaned
+
+select avg("price") from airbnb_cleaned
+where "neighbourhood_group" = 'Brooklyn' and "room_type" = 'Shared room'
+
+update airbnb_cleaned
+set "price" = 50
+where "price" = 0
+and "neighbourhood_group" = 'Brooklyn'
+and "room_type" = 'Shared room'
+
+select avg("price") 
+from airbnb_cleaned
+where "neighbourhood_group" = 'Bronx' 
+and "room_type" = 'Private room'
+
+update airbnb_cleaned
+set "price" = 66
+where "price" = 0
+and "neighbourhood_group" = 'Bronx'
+and "room_type" = 'Private room'
+
+select avg("price") 
+from airbnb_cleaned
+where "neighbourhood_group" = 'Manhattan' 
+and "room_type" = 'Entire home/apt'
+
+update airbnb_cleaned
+set "price" = 249
+where "price" = 0
+and "neighbourhood_group" = 'Manhattan'
+and "room_type" = 'Entire home/apt'
+
+select * 
+from airbnb_cleaned
+where "price" = '0'
+or "price" is null
+
+//column c13 data cleaning
+
+select * 
+from airbnb_cleaned
+where "last_review" is null
+
+alter table airbnb_cleaned
+add column review_status STRING;
+
+update airbnb_cleaned
+set review_status =
+    case
+        when "last_review" is null then 'No Review'
+        else 'Reviewed'
+    end
+    
+
+select * from airbnb_cleaned
+
+//cleaning c14 
+select * 
+from airbnb_cleaned
+where "reviews_per_month" is null
+
+select * 
+from airbnb_cleaned
+where "reviews_per_month" is null
+and "last_review" is null
+
+select * 
+from airbnb_cleaned
+where "reviews_per_month" is null 
+and "number_of_reviews" > 0
+
+desc table airbnb_cleaned
+
+update airbnb_cleaned
+set "reviews_per_month" = 0
+where "reviews_per_month" is null
+and "number_of_reviews" = 0
+
+select * from airbnb_cleaned 
+where "reviews_per_month" is null 
+or "reviews_per_month" = 0
+
+select * from airbnb_cleaned
+
+select * 
+from airbnb_cleaned
+where "price in rupees " = 0
+
+update airbnb_cleaned
+set "price in rupees " = ("price" * 83) 
+where "price in rupees " = 0 
+
+select * from airbnb_cleaned
+
+
+
+
+
